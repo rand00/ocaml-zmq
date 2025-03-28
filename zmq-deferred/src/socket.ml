@@ -141,11 +141,8 @@ module Make(T: Deferred.T) = struct
           event_loop t
         | exception Unix.Unix_error(Unix.ENOTSOCK, "zmq_getsockopt", "") ->
           Deferred.return ()
-        | exception Unix.Unix_error(Unix.EINTR, (
-            "zmq_msg_recv"
-          | "zmq_getsockopt"
-        ), "") ->
-          Format.eprintf "DEBUG: ZMQ-lwt: Got EINTR, retrying..\n%!";
+        | exception Unix.Unix_error(Unix.EINTR, "zmq_getsockopt", "") ->
+          Format.eprintf "DEBUG: ZMQ-lwt: Got EINTR in event-loop - retrying..\n%!";
           event_loop t
       end
 
@@ -169,7 +166,9 @@ module Make(T: Deferred.T) = struct
     let f' mailbox () =
       let res = match f t.socket with
         | v -> Ok v
-        | exception Unix.Unix_error (Unix.EAGAIN, _, _) ->
+        | exception Unix.Unix_error (Unix.EAGAIN, _, _) 
+        | exception Unix.Unix_error (Unix.EINTR, "zmq_msg_recv", _) ->
+          Format.eprintf "DEBUG: ZMQ-lwt: Got EINTR from 'zmq_msg_recv' - retrying..\n%!";
           (* Signal try again *)
           raise Retry
         | exception exn -> Error exn
