@@ -142,7 +142,6 @@ module Make(T: Deferred.T) = struct
         | exception Unix.Unix_error(Unix.ENOTSOCK, "zmq_getsockopt", "") ->
           Deferred.return ()
         | exception Unix.Unix_error(Unix.EINTR, "zmq_getsockopt", "") ->
-          Format.eprintf "DEBUG: ZMQ-lwt: Got EINTR, retrying..\n%!";
           event_loop t
       end
 
