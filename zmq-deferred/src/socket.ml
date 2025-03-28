@@ -141,6 +141,9 @@ module Make(T: Deferred.T) = struct
           event_loop t
         | exception Unix.Unix_error(Unix.ENOTSOCK, "zmq_getsockopt", "") ->
           Deferred.return ()
+        | exception Unix.Unix_error(Unix.EINTR, "zmq_getsockopt", "") ->
+          Format.eprintf "DEBUG: ZMQ-lwt: Got EINTR, retrying..\n%!";
+          event_loop t
       end
 
   let of_socket: ('a Zmq.Socket.t -> 'a t) of_socket_args = fun socket ->
