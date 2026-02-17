@@ -139,6 +139,8 @@ module Make(T: Deferred.T) = struct
           Condition.signal t.fd_condition ();
           Condition.wait t.condition >>= fun () ->
           event_loop t
+        | exception Unix.Unix_error(Unix.EINTR, "zmq_getsockopt", "") ->
+          event_loop t
         | exception Unix.Unix_error(Unix.ENOTSOCK, "zmq_getsockopt", "") ->
           Deferred.return ()
       end
